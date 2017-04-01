@@ -1,38 +1,47 @@
 import { combineReducers } from 'redux';
 
-const getInitialState = route => ({
+const INITIAL_STATE = {
   data: null,
-  fetching: false,
   error: null,
+  fetching: false,
+  status: null,
   cancelled: false,
-});
+  //responseHeaders: {},
+};
 
-const createReducer = (route, actionTypes) => (state = getInitialState(route), action) => {
+// Create reducer for given actionTypes
+const createReducer = actionTypes => (state = INITIAL_STATE, action) => {
   switch (action.type) {
     case actionTypes.PENDING:
       return {
         ...state,
-        fetching: true,
         error: null,
+        fetching: true,
+        status: null,
         cancelled: false,
+        //responseHeaders: {},
       };
 
     case actionTypes.FULFILLED:
       return {
         ...state,
-        data: action.payload,
-        fetching: false,
+        data: action.payload.data,
         error: null,
+        fetching: false,
+        status: action.payload.status,
         cancelled: false,
+        //responseHeaders: action.payload.headers,
       };
 
     case actionTypes.REJECTED:
       return {
         ...state,
         data: null,
+        error: action.payload.error,
         fetching: false,
-        error: action.payload,
+        status: action.payload.status,
         cancelled: false,
+        //responseHeaders: action.payload.headers,
       };
 
     case actionTypes.CANCELLED:
@@ -44,7 +53,6 @@ const createReducer = (route, actionTypes) => (state = getInitialState(route), a
       return {
         ...state,
         fetching: false,
-        error: null,
         cancelled: true,
       };
 
@@ -55,7 +63,8 @@ const createReducer = (route, actionTypes) => (state = getInitialState(route), a
 
 const createRouteReducers = (routes, actionTypes) => {
   const reducers = {};
-  Object.keys(routes).forEach(route => reducers[route] = createReducer(route, actionTypes[route]));
+  Object.keys(routes).forEach(route =>
+    reducers[route] = createReducer(actionTypes[route]));
 
   return combineReducers(reducers);
 };

@@ -16,12 +16,18 @@ const createActionTypes = route => ({
 });
 
 // Action creator for given method, using given actionTypes
-const createAction = (config, actionTypes, method) => (params = {}, options) => {
-  let url = config.url;
-  const queryParams = {};
+const createAction = ({
+  routeConfig,
+  routeActionTypes,
+  method,
+  config = {},
+}) => (params = {}, requestOptions) => {
+  // Concatenate route URL with base URL if set
+  let url = config.baseUrl ? `${config.baseUrl}${routeConfig.url}` : routeConfig.url;
 
   // Replace placeholders
   // TODO: what if we want a param both in URL and querystring?
+  const queryParams = {};
   Object.keys(params).forEach(param => {
     if (url.indexOf(`{${param}}`) !== -1) {
       // Param found in URL, replace it with value
@@ -37,12 +43,13 @@ const createAction = (config, actionTypes, method) => (params = {}, options) => 
   queryString = queryString ? `?${queryString}`: '';
 
   return {
-    type: method === 'cancel' ? actionTypes.CANCELLED : actionTypes.PENDING,
+    type: method === 'cancel' ? routeActionTypes.CANCELLED : routeActionTypes.PENDING,
     payload: {
       params,
       options: {
-        ...config,
-        ...options,
+        ...config.defaultOptions,
+        ...routeConfig,
+        ...requestOptions,
         method,
         url: `${url}${queryString}`,
       },
@@ -51,7 +58,7 @@ const createAction = (config, actionTypes, method) => (params = {}, options) => 
 };
 
 // Create all actions/actionTypes for given routes
-const createRouteActions = routes => {
+const createRouteActions = (routes, config) => {
   const actionTypes = {};
   const actions = {
     _internals: {}
@@ -79,7 +86,12 @@ const createRouteActions = routes => {
 
     // User-facing actions. One per [route, HTTP method] pair
     methods.forEach(method =>
-      actions[method][route] = createAction(routes[route], actionTypes[route], method));
+      actions[method][route] = createAction({
+        routeConfig: routes[route],
+        routeActionTypes: actionTypes[route],
+        method,
+        config,
+      }));
   });
 
   return { actions, actionTypes };

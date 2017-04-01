@@ -1,13 +1,34 @@
 import ReduxObservableApi from './redux-observable-api';
 
-// API endpoint configuration
-const rest = new ReduxObservableApi({
+//import { fakeAjax } from './redux-observable-api/ajax';
+//const rxFetch = require('rxjs-fetch');
+
+// Global config
+const config = {
+  baseUrl: '',
+  //adapter: fakeAjax,
+  //adapter: options => rxFetch(options).failOnHttpError(),
+  defaultOptions: {
+    /*
+    headers: {
+      Authorization: 'Bearer blahblah',
+    }
+    */
+  }
+};
+
+const routes = {
+  // Route configs
   users: {
-    url: '/users/{user}',
+    url: 'https://api.github.com/users/{user}',
   },
-}, {
-  baseUrl: 'https://api.github.com',
-});
+  users2: {
+    url: 'http://localhost:3888/users/{user}',
+  },
+};
+
+// API endpoint configuration
+const rest = new ReduxObservableApi(routes, config);
 
 // TODO: less noise
 const actions = rest.actions;
